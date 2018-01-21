@@ -8,7 +8,7 @@ user_id movie_id rating_given
 305	451	3	
 645	86	3	
 624	257	2	
-286	101  4	
+286	101    4	
 
 '''
 from pyspark import SparkConf, SparkContext
