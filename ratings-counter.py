@@ -17,7 +17,7 @@ import collections
 #Fundamental starting point from saprk framework to create SparkContext
 #Can not create a sparkcontext without sparkconf
 
-conf = SparkConf().setMaster("local").setAppName("RatingsHistogram")
+conf = SparkConf().setMaster("local").setAppName("RatingsCount")
 
 # setMaster : making your local machine as master node
 #RatingsHistogram : application name 
