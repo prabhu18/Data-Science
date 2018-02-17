@@ -1,0 +1,198 @@
+Spark-Lab-UTD
+
+1. Which movie has the highest count of ratings
+
+val ratings = sc.textFile("/FileStore/tables/ratings.csv")
+val header = ratings.first
+val rating_data = ratings.filter(line => line != header)
+
+val movie_rating = rating_data.map(x => ((x.split(","))(1), 1))
+val movie_rating_reduced= movie_rating.reduceByKey((x,y)=>(x+y))
+val temp_result= sc.parallelize(movie_rating_reduced.sortBy(-_._2).take(1))
+
+val movies = sc.textFile("/FileStore/tables/movies.csv")
+val new_header = movies.first
+val movie_data = movies.filter(line => line != new_header)
+val movieid_name = movie_data.map(x => ((x.split(","))(0), (x.split(","))(1)))
+
+var result = temp_result.join(movieid_name).collect()
+result(0)._2._2
+
+Comment :It will be movie with highest rating
+
+ 
+2. Find the movie with the lowest count of ratings
+
+val ratings = sc.textFile("/FileStore/tables/ratings.csv")
+val header = ratings.first
+val rating_data = ratings.filter(line => line != header)
+
+val movie_rating = rating_data.map(x => ((x.split(","))(1), 1))
+val movie_rating_reduced= movie_rating.reduceByKey((x,y)=>(x+y))
+val temp_result= sc.parallelize(movie_rating_reduced.sortBy(_._2).take(1))
+
+val movies = sc.textFile("/FileStore/tables/movies.csv")
+val new_header = movies.first
+val movie_data = movies.filter(line => line != new_header)
+val movieid_name = movie_data.map(x => ((x.split(","))(0), (x.split(","))(1)))
+
+var result = temp_result.join(movieid_name).collect()
+result(0)._2._2
+
+
+Comment : There are many movies with rating 1, displaying only one.
+
+
+
+3. Find the average rating for each movie?
+
+
+val ratings = sc.textFile("/FileStore/tables/ratings.csv")
+val header = ratings.first
+val rating_data = ratings.filter(line => line != header)
+
+val temp_result1 = rating_data.map(x => ((x.split(","))(1),(x.split(","))(2)))
+val temp_result2= temp_result1.mapValues(x=>(x.toDouble,1.0))
+var temp_result3=temp_result2.reduceByKey((x,y)=>((x._1+y._1,x._2+y._2)))
+val result = temp_result3.mapValues(x=>(x._1/x._2)).collect()
+
+
+
+4. Find the movies with the highest average rating (if there is a tie, list all movies)?
+
+
+val ratings = sc.textFile("/FileStore/tables/ratings.csv")
+val header = ratings.first
+val rating_data = ratings.filter(line => line != header)
+
+val temp_result1 = rating_data.map(x => ((x.split(","))(1),(x.split(","))(2)))
+val temp_result2= temp_result1.mapValues(x=>(x.toDouble,1.0))
+var temp_result3=temp_result2.reduceByKey((x,y)=>((x._1+y._1,x._2+y._2)))
+val temp_result4 = temp_result3.mapValues(x=>(x._1/x._2)).sortBy(-_._2)
+
+val highestcount=temp_result4.take(1)(0)._2
+val temp_result5 = temp_result4.filter(x=>x._2==highestcount)
+
+
+val movies = sc.textFile("/FileStore/tables/movies.csv")
+val new_header = movies.first
+val movie_data = movies.filter(line => line != header)
+val movieid_name = movie_data.map(x => ((x.split(","))(0), (x.split(","))(1)))
+
+var temp_result6 = temp_result5.join(movieid_name).values
+var result=  temp_result6.map( x=>(x._2,x._1)).collect()
+
+
+5. Find the movies with the lowest average rating (if there is a tie, list all movies)?
+
+val ratings = sc.textFile("/FileStore/tables/ratings.csv")
+val header = ratings.first
+val rating_data = ratings.filter(line => line != header)
+
+val temp_result1 = rating_data.map(x => ((x.split(","))(1),(x.split(","))(2)))
+val temp_result2= temp_result1.mapValues(x=>(x.toDouble,1.0))
+var temp_result3=temp_result2.reduceByKey((x,y)=>((x._1+y._1,x._2+y._2)))
+val temp_result4 = temp_result3.mapValues(x=>(x._1/x._2)).sortBy(_._2)
+
+val lowestcount=temp_result4.take(1)(0)._2
+val temp_result5 = temp_result4.filter(x=>x._2==lowestcount)
+
+
+val movies = sc.textFile("/FileStore/tables/movies.csv")
+val new_header = movies.first
+val movie_data = movies.filter(line => line != header)
+val movieid_name = movie_data.map(x => ((x.split(","))(0), (x.split(","))(1)))
+
+var temp_result6 = temp_result5.join(movieid_name).values
+var result=  temp_result6.map( x=>(x._2,x._1)).collect()
+
+6.Now join the movies and ratings tables, and give the names of the top 10 movies with the
+highest average ratings.
+
+val ratings = sc.textFile("/FileStore/tables/ratings.csv")
+val header = ratings.first
+val rating_data = ratings.filter(line => line != header)
+
+val temp_result1 = rating_data.map(x => ((x.split(","))(1),(x.split(","))(2)))
+val temp_result2= temp_result1.mapValues(x=>(x.toDouble,1.0))
+var temp_result3=temp_result2.reduceByKey((x,y)=>((x._1+y._1,x._2+y._2)))
+val temp_result4 = temp_result3.mapValues(x=>(x._1/x._2)).sortBy(-_._2)
+val highestcount=temp_result4.take(1)(0)._2
+val temp_result5 = temp_result4.filter(x=>x._2==highestcount)
+
+
+val movies = sc.textFile("/FileStore/tables/movies.csv")
+val new_header = movies.first
+val movie_data = movies.filter(line => line != new_header)
+val movieid_name = movie_data.map(x => ((x.split(","))(0), (x.split(","))(1)))
+
+val temp_result6=temp_result5.join(movieid_name).values.take(10)
+val result=temp_result6.map(x=>x._2)
+
+7. Join the movies and tags tables, and output the names all movies with the tag 'mathematics'?
+
+val tags = sc.textFile("/FileStore/tables/tags.csv")
+val header = tags.first
+val tag_data = tags.filter(line => line != header)
+val tag_and_movie = tag_data.map(x => ((x.split(","))(1), (x.split(","))(2)))
+
+val movies = sc.textFile("/FileStore/tables/movies.csv")
+val new_header = movies.first
+val movie_data = movies.filter(line => line != new_header)
+val movieid_name = movie_data.map(x => ((x.split(","))(0), (x.split(","))(1)))
+
+val temp_result1= tag_and_movie.filter{case(x: String,y:String)=>y.contains("mathematics")}
+var temp_result2= temp_result1.join(movieid_name).values.collect()
+
+
+
+8. What is the average ratings of movies that contain the tag 'artificial intelligence'?
+
+val tags = sc.textFile("/FileStore/tables/tags.csv")
+val header = tags.first
+val tag_data = tags.filter(line => line != header)
+val tag_and_movie = tag_data.map(x => ((x.split(","))(1), (x.split(","))(2)))
+val filtered_tag_and_movie= tag_and_movie.filter{case(x: String,y:String)=>y.contains("artificial intelligence")}
+
+
+val ratings = sc.textFile("/FileStore/tables/ratings.csv")
+val new_header = ratings.first
+val rating_data = ratings.filter(line => line != new_header)
+val temp_result1 = rating_data.map(x => ((x.split(","))(1),(x.split(","))(2)))
+val temp_result2= temp_result1.mapValues(x=>(x.toDouble,1.0))
+var temp_result3=temp_result2.reduceByKey((x,y)=>((x._1+y._1,x._2+y._2)))
+val temp_result4 = temp_result3.mapValues(x=>(x._1/x._2))
+
+var result = filtered_tag_and_movie.join(temp_result4).collect()
+
+
+9. What is the average rating of movies that have the genre 'Crime'?
+
+
+val movies = sc.textFile("/FileStore/tables/movies.csv")
+val header = movies.first
+val movie_data = movies.filter(line => line != header)
+val movieid_name = movie_data.map(x => ((x.split(","))(0), (x.split(","))(2)))
+val movieid_name_genre= movieid_name.filter{case(x: String,y:String)=>y.contains("Crime")}
+
+
+val ratings = sc.textFile("/FileStore/tables/ratings.csv")
+val new_header = ratings.first
+val rating_data = ratings.filter(line => line != new_header)
+val temp_result1 = rating_data.map(x => ((x.split(","))(1),(x.split(","))(2)))
+val temp_result2= temp_result1.mapValues(x=>(x.toDouble,1.0))
+var temp_result3=temp_result2.reduceByKey((x,y)=>((x._1+y._1,x._2+y._2)))
+val temp_result4 = temp_result3.mapValues(x=>(x._1/x._2))
+
+var result = movieid_name_genre.join(temp_result4).collect()
+
+
+10. Which is the most popular tag i.e. which tag occurs most frequently?
+
+val tags = sc.textFile("/FileStore/tables/tags.csv")
+val header = tags.first
+val tag_data = tags.filter(line => line != header)
+val tag_and_movie = tag_data.map(x => ((x.split(","))(2),1.0))
+val temp_result1= tag_and_movie.reduceByKey((x,y)=>(x+y))
+val highest_count= temp_result1.sortBy(-_._2).take(1)(0)._2
+val result = temp_result1.filter(x=>x._2==highest_count).collect()
